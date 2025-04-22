@@ -107,21 +107,30 @@
       <el-button type="primary" size="mini" @click="addNew" style="background: #5bc98c;border: None;">
         新增
       </el-button>
+      <el-button type="primary" size="mini" @click="showBatchImport" style="background: #409EFF;border: None;">
+        批量导入
+      </el-button>
       <el-button type="primary"
                  size="mini"
                  @click="deleteRow(filteredTtsModels.filter(row => row.selected))"
                  style="background: red;border:None">删除
       </el-button>
     </div>
+    <batch-import-voice-dialog
+      :show-dialog.sync="batchImportVisible"
+      :tts-model-id="ttsModelId"
+      @import-success="handleImportSuccess"
+    />
   </el-dialog>
 </template>
 
 <script>
 import AudioPlayer from './AudioPlayer.vue'
 import Api from "@/apis/api";
+import BatchImportVoiceDialog from './BatchImportVoiceDialog.vue';
 
 export default {
-  components: {AudioPlayer},
+  components: {AudioPlayer, BatchImportVoiceDialog},
   props: {
     visible: {
       type: Boolean,
@@ -148,6 +157,7 @@ export default {
       selectAll: false,
       selectedRows: [],
       loading: false,
+      batchImportVisible: false,
     };
   },
   watch: {
@@ -477,6 +487,14 @@ export default {
 
     isValidAudioUrl(url) {
       return url && (url.endsWith('.mp3') || url.endsWith('.ogg') || url.endsWith('.wav'));
+    },
+
+    showBatchImport() {
+      this.batchImportVisible = true;
+    },
+
+    handleImportSuccess() {
+      this.loadData();
     }
   }
 };
@@ -706,6 +724,12 @@ export default {
 ::v-deep .el-table__row .el-button {
   flex-shrink: 0;
   margin: 2px !important;
+}
+
+.header-actions {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
 }
 
 </style>

@@ -40,6 +40,5 @@ public class TimbreDataDTO {
     private String ttsVoice;
 
     @Schema(description = "音频播放地址")
-    @NotBlank(message = "{timbre.voiceDemo.require}")
     private String voiceDemo;
 }
