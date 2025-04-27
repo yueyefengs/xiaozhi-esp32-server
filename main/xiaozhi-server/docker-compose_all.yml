@@ -4,7 +4,10 @@ version: '3'
 services:
   # Server模块
   xiaozhi-esp32-server:
-    image: ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:server_latest
+    # build: 
+    #   context: .
+    #   dockerfile: Dockerfile-server
+    image: xiaozhi-server:latest
     container_name: xiaozhi-esp32-server
     depends_on:
       - xiaozhi-esp32-server-db
@@ -27,7 +30,10 @@ services:
 
   # manager-api和manager-web模块
   xiaozhi-esp32-server-web:
-    image: ghcr.nju.edu.cn/xinnan-tech/xiaozhi-esp32-server:web_latest
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile-web
+    image: xiaozhi-web:latest
     container_name: xiaozhi-esp32-server-web
     restart: always
     networks:
@@ -47,8 +53,13 @@ services:
       - SPRING_DATASOURCE_DRUID_PASSWORD=123456
       - SPRING_DATA_REDIS_HOST=xiaozhi-esp32-server-redis
       - SPRING_DATA_REDIS_PORT=6379
+      - SERVER_SERVLET_CONTEXT_PATH=/xiaozhi
+      - SERVER_PORT=8003
+    entrypoint: ["/bin/sh"]
+    command: ["/start.sh"]
+
   xiaozhi-esp32-server-db:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: xiaozhi-esp32-server-db
     healthcheck:
       test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
@@ -58,15 +69,16 @@ services:
     restart: always
     networks:
       - default
-    expose:
-      - "3306:3306"
+    ports:
+      - "33060:3306"
     volumes:
       - ./mysql/data:/var/lib/mysql
     environment:
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_DATABASE=xiaozhi_esp32_server
-      - MYSQL_INITDB_ARGS="--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
+    command: --default-authentication-plugin=mysql_native_password
+
   xiaozhi-esp32-server-redis:
     image: redis
     expose:
@@ -79,5 +91,6 @@ services:
       retries: 3
     networks:
       - default
+
 networks:
   default:
