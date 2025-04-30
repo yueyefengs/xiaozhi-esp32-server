@@ -80,6 +80,18 @@ const routes = [
       title: '参数管理'
     }
   },
+  // 添加OTA固件管理路由
+  {
+    path: '/ota-management',
+    name: 'OTAManagement',
+    component: function () {
+      return import('../views/OTAManagement.vue')
+    },
+    meta: {
+      requiresAuth: true,
+      title: '固件管理'
+    }
+  },
 ]
 
 const router = new VueRouter({
@@ -101,7 +113,7 @@ VueRouter.prototype.push = function push(location) {
 }
 
 // 需要登录才能访问的路由
-const protectedRoutes = ['home', 'RoleConfig', 'DeviceManagement', 'UserManagement', 'ModelConfig']
+const protectedRoutes = ['home', 'RoleConfig', 'DeviceManagement', 'UserManagement', 'ModelConfig', 'ParamsManagement', 'OTAManagement']
 
 // 路由守卫
 router.beforeEach((to, from, next) => {

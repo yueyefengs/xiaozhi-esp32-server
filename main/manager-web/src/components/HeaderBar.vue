@@ -32,6 +32,13 @@
             :style="{ filter: $route.path === '/params-management' ? 'brightness(0) invert(1)' : 'None' }" />
           参数管理
         </div>
+        <!-- 在参数管理之后添加OTA管理入口 -->
+        <div v-if="isSuperAdmin" class="equipment-management"
+          :class="{ 'active-tab': $route.path === '/ota-management' }" @click="goOtaManagement">
+          <img loading="lazy" alt="" src="@/assets/header/firmware_management.png"
+            :style="{ filter: $route.path === '/ota-management' ? 'brightness(0) invert(1)' : 'None' }" />
+          固件管理
+        </div>
       </div>
 
       <!-- 右侧元素 -->
@@ -104,6 +111,9 @@ export default {
     },
     goParamManagement() {
       this.$router.push('/params-management')
+    },
+    goOtaManagement() {
+      this.$router.push('/ota-management')
     },
     // 获取用户信息
     fetchUserInfo() {

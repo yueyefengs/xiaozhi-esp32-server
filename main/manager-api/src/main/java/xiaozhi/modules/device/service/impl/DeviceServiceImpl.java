@@ -35,6 +35,8 @@ import xiaozhi.modules.device.vo.UserShowDeviceListVO;
 import xiaozhi.modules.security.user.SecurityUser;
 import xiaozhi.modules.sys.service.SysParamsService;
 import xiaozhi.modules.sys.service.SysUserUtilService;
+import xiaozhi.modules.ota.entity.AiOtaEntity;
+import xiaozhi.modules.ota.service.AiOtaService;
 
 @Service
 public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> implements DeviceService {
@@ -46,15 +48,19 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
     private final String frontedUrl;
 
     private final RedisTemplate<String, Object> redisTemplate;
+    
+    private final AiOtaService aiOtaService;
 
     // 添加构造函数来初始化 deviceMapper
     public DeviceServiceImpl(DeviceDao deviceDao, SysUserUtilService sysUserUtilService,
             SysParamsService sysParamsService,
-            RedisTemplate<String, Object> redisTemplate) {
+            RedisTemplate<String, Object> redisTemplate,
+            AiOtaService aiOtaService) {
         this.deviceDao = deviceDao;
         this.sysUserUtilService = sysUserUtilService;
         this.frontedUrl = sysParamsService.getValue(Constant.SERVER_FRONTED_URL, true);
         this.redisTemplate = redisTemplate;
+        this.aiOtaService = aiOtaService;
     }
 
     @Override
@@ -124,18 +130,31 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
             DeviceReportReqDTO deviceReport) {
         DeviceReportRespDTO response = new DeviceReportRespDTO();
         response.setServer_time(buildServerTime());
-        // todo: 此处是固件信息，目前是针对固件上传上来的版本号再返回回去
-        // 在未来开发了固件更新功能，需要更换此处代码，
-        // 或写定时任务定期请求虾哥的OTA，获取最新的版本讯息保存到服务内
-        DeviceReportRespDTO.Firmware firmware = new DeviceReportRespDTO.Firmware();
-        firmware.setVersion(deviceReport.getApplication().getVersion());
-        firmware.setUrl("http://localhost:8002/xiaozhi/ota/download");
-        response.setFirmware(firmware);
 
         DeviceEntity deviceById = getDeviceById(macAddress);
         if (deviceById != null) { // 如果设备存在，则更新上次连接时间
             deviceById.setLastConnectedAt(new Date());
             deviceDao.updateById(deviceById);
+            
+            // 只有设备开启自动更新且上报版本信息不为空时才检查升级
+            if (deviceById.getAutoUpdate() != null && deviceById.getAutoUpdate() == 1 
+                    && deviceReport.getApplication() != null 
+                    && StringUtils.isNotBlank(deviceReport.getApplication().getVersion())) {
+                
+                // 获取最新版本固件
+                AiOtaEntity latestOta = aiOtaService.getLatestVersion();
+                
+                // 如果有最新版本固件且版本号不同，则返回固件更新信息
+                if (latestOta != null && StringUtils.isNotBlank(latestOta.getVersion()) 
+                        && StringUtils.isNotBlank(latestOta.getFirmwarePath())
+                        && !latestOta.getVersion().equals(deviceReport.getApplication().getVersion())) {
+                    
+                    DeviceReportRespDTO.Firmware firmware = new DeviceReportRespDTO.Firmware();
+                    firmware.setVersion(latestOta.getVersion());
+                    firmware.setUrl(latestOta.getFirmwarePath());
+                    response.setFirmware(firmware);
+                }
+            }
         } else { // 如果设备不存在，则生成激活码
             DeviceReportRespDTO.Activation code = buildActivation(macAddress, deviceReport);
             response.setActivation(code);

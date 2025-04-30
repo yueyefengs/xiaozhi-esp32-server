@@ -52,10 +52,24 @@ public abstract class BaseServiceImpl<M extends BaseMapper<T>, T> implements Bas
         long limit = 10;
 
         if (params.get(Constant.PAGE) != null) {
-            curPage = Long.parseLong((String) params.get(Constant.PAGE));
+            Object pageObj = params.get(Constant.PAGE);
+            if (pageObj instanceof String) {
+                curPage = Long.parseLong((String) pageObj);
+            } else if (pageObj instanceof Number) {
+                curPage = ((Number) pageObj).longValue();
+            } else {
+                throw new IllegalArgumentException("Invalid type for PAGE parameter");
+            }
         }
         if (params.get(Constant.LIMIT) != null) {
-            limit = Long.parseLong((String) params.get(Constant.LIMIT));
+            Object limitObj = params.get(Constant.LIMIT);
+            if (limitObj instanceof String) {
+                limit = Long.parseLong((String) limitObj);
+            } else if (limitObj instanceof Number) {
+                limit = ((Number) limitObj).longValue();
+            } else {
+                throw new IllegalArgumentException("Invalid type for LIMIT parameter");
+            }
         }
 
         // 分页对象

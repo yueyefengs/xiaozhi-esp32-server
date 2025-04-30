@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +30,7 @@ import xiaozhi.modules.sys.service.SysParamsService;
 @Tag(name = "参数管理")
 @AllArgsConstructor
 public class ConfigController {
+    private static final Logger logger = LoggerFactory.getLogger(ConfigController.class);
     private final ConfigService configService;
     private final SysParamsService sysParamsService;
 
@@ -53,6 +56,7 @@ public class ConfigController {
 
     private void checkSecret(String secret) {
         String secretParam = sysParamsService.getValue(Constant.SERVER_SECRET, true);
+        // logger.info("Provided secret: {}, Retrieved secret: {}", secret, secretParam);
         // 验证密钥
         if (StringUtils.isBlank(secret) || !secret.equals(secretParam)) {
             throw new RenException("密钥错误");

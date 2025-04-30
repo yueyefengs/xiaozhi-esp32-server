@@ -23,8 +23,8 @@ class WebSocketServer:
         self.active_connections = set()
 
     async def start(self):
-        server_config = self.config["server"]
-        host = server_config["ip"]
+        server_config = self.config.get("server", {})
+        host = server_config.get("ip", "0.0.0.0")
         port = int(server_config.get("port", 8000))
 
         self.logger.bind(tag=TAG).info(

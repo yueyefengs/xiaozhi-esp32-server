@@ -3,6 +3,7 @@ import time
 from typing import Optional, Dict
 
 import httpx
+import logging
 
 TAG = __name__
 
@@ -61,9 +62,20 @@ class ManageApiClient:
     def _request(cls, method: str, endpoint: str, **kwargs) -> Dict:
         """发送单次HTTP请求并处理响应"""
         endpoint = endpoint.lstrip("/")
+        logger = logging.getLogger(__name__)
+        curl_cmd = f"curl -X {method} {cls._client.base_url}{endpoint}"
+        if 'headers' not in kwargs:
+            kwargs['headers'] = {}
+        kwargs['headers']['Content-Type'] = 'application/json; charset=UTF-8'  # Force JSON Content-Type
+        if 'headers' in kwargs:
+            for key, value in kwargs.get('headers', {}).items():
+                curl_cmd += f" -H '{key}: {value}'"
+        if 'json' in kwargs:
+            curl_cmd += f" -d '{str(kwargs.get('json'))}'"  # Simple string representation
+        logger.error(f"API Request as curl: {curl_cmd}")  # Log the curl command
         response = cls._client.request(method, endpoint, **kwargs)
         response.raise_for_status()
-
+        logger.error(f'API returned parameters: {response.json()}')
         result = response.json()
 
         # 处理API返回的业务错误

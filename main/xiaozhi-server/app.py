@@ -30,22 +30,15 @@ async def main():
     check_config_file()
     check_ffmpeg_installed()
     config = load_config()
-
-    # 启动 WebSocket 服务器
+    print('Starting WebSocket server for debugging...')
     ws_server = WebSocketServer(config)
-    ws_task = asyncio.create_task(ws_server.start())
-
     try:
-        await wait_for_exit()  # 监听退出信号
-    except asyncio.CancelledError:
-        print("任务被取消，清理资源中...")
+        await ws_server.start()
+    except Exception as e:
+        print(f'Error during server start: {e}')
     finally:
-        ws_task.cancel()
-        try:
-            await ws_task
-        except asyncio.CancelledError:
-            pass
-        print("服务器已关闭，程序退出。")
+        print('Server has stopped or encountered an issue.')
+        await asyncio.sleep(0.1)
 
 
 if __name__ == "__main__":
